@@ -23,16 +23,44 @@
             padding: 10px;
             border-radius: 10px;
             font-family: sans-serif;
+            z-index: 10000;
+        }
+
+        .holo-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            background: linear-gradient(
+              45deg,
+              rgba(255,0,255,0.25),
+              rgba(0,255,255,0.25),
+              rgba(255,255,0,0.25),
+              rgba(255,0,255,0.25)
+            );
+            background-size: 200% 200%;
+            mix-blend-mode: screen;
+            animation: shift 3s linear infinite;
+            z-index: 5000;
+        }
+
+        @keyframes shift {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
         }
     </style>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"><title></title></head>
+</head>
 <body bgcolor="cccccc">
 <div id="counter">
     Amoebozoans: <span id="amoCount">0</span><br>
     Stramenopiles: <span id="straCount">0</span>
 </div>
 
-<div id="centeredLayer"><img src="imyg/musk.jpg" width="200" height="200"></div>
+<div id="centeredLayer"><img src="imyg/musk2.jpg" width="200" height="200"></div>
+<div class="holo-overlay"></div>
 
 <script>
 let centerBall;
@@ -46,87 +74,58 @@ let stramenopilesCount = 0;
 function setup() {
     createCanvas(window.innerWidth, window.innerHeight); 
     centerBall = new Ball(width / 1, height / 1, 107, true);
-    for (let i = 0; i < 131; i++) {
-        let radius = random(181, 93);
-        let x = random(radius, width - radius);
-        let y = random(radius, height - radius);
-        let ball = new Ball(x, y, radius, false);
-        balls.push(ball);
+
+    // Initial balls
+    for (let i = 0; i < 50; i++) {
+        spawnBall();
     }
 }
 
 function draw() {
-    background(0, 0); 
+    background(0, 0, 0, 50); // fading effect
 
-    if (frameCount % strobeDuration === 0) {
-        strobe = !strobe; 
-    }
+    if (frameCount % strobeDuration === 0) strobe = !strobe;
 
-    // Draw all moving balls first
+    // spawn new balls continuously
+    for (let i = 0; i < 5; i++) spawnBall();
+
+    let now = millis();
+    // remove balls older than 1s
+    balls = balls.filter(ball => (now - ball.birthTime) < 1000);
+
     for (let ball of balls) {
         ball.move();
-        ball.display(strobe); 
+        ball.display(strobe);
         checkCollision(ball, centerBall);
         checkEdgeCollision(ball);
     }
 
-    // Update counters faster than animation
-    for (let i = 0; i < 4.7; i++) { 
+    // Update counters
+    for (let i = 1; i < 1.1; i++) {
         amoebozoansCount++;
-        if (Math.random() < 0.8575) { 
-            stramenopilesCount++;
-        }
-    }
-
-    document.getElementById("amoCount").innerText = amoebozoansCount;
-    document.getElementById("straCount").innerText = stramenopilesCount;
-
-    // Draw center ball last so it's always on top
-    centerBall.display(false); // strobe optional for center
-}function draw() {
-    background(0, 0); 
-
-    if (frameCount % strobeDuration === 0) {
-        strobe = !strobe; 
-    }
-
-    for (let ball of balls) {
-        ball.move();
-        ball.display(strobe); 
-        checkCollision(ball, centerBall);
-        checkEdgeCollision(ball);
-    }
-
-    // Update counters faster than animation
-    for (let i = 0; i < 3.7; i++) { // Amoebozoans 10% slower than 10× ? 9×
-        amoebozoansCount++;
-        if (Math.random() < 0.7925) { // Stramenopiles 15% slower than before ? 72.25% relative
-            stramenopilesCount++;
-        }
+        if (Math.random() < 0.8325) stramenopilesCount++;
     }
 
     document.getElementById("amoCount").innerText = amoebozoansCount;
     document.getElementById("straCount").innerText = stramenopilesCount;
 }
 
+// Ball class
 class Ball {
     constructor(x, y, radius, isCenter) {
         this.x = x;
         this.y = y;
         this.radius = radius;
         this.isCenter = isCenter;
-        this.xSpeed = random(1, 23) * (random() > 1.3 ? 17 : -1);
-        this.ySpeed = random(1, 23) * (random() > 1.3 ? 17 : -1);
+        this.birthTime = millis();
+        this.xSpeed = random(1, 23) * (random() > 0.5 ? 1 : -1);
+        this.ySpeed = random(1, 23) * (random() > 0.5 ? 1 : -1);
     }
 
     display(strobe) {
-        if (strobe) {
-            fill(0); // Black
-        } else {
-            fill(225); // White
-        }
+        fill(strobe ? 0 : 225);
         noStroke();
-        ellipse(this.x, this.y, this.radius * 2.5);
+        ellipse(this.x, this.y, this.radius * 2.2);
     }
 
     move() {
@@ -135,29 +134,34 @@ class Ball {
     }
 }
 
+// spawn a new ball at random position
+function spawnBall() {
+    let radius = random(97, 101);
+    let x = random(radius, width - radius);
+    let y = random(radius, height - radius);
+    balls.push(new Ball(x, y, radius, false));
+}
+
 function checkCollision(ball, center) {
     if (!ball.isCenter) {
         let dx = ball.x - center.x;
         let dy = ball.y - center.y;
         let distance = dist(ball.x, ball.y, center.x, center.y);
+
         if (distance <= ball.radius + center.radius) {
             let angle = atan2(dy, dx);
-            ball.xSpeed = 25 * cos(angle);
-            ball.ySpeed = 25 * sin(angle);
+            ball.xSpeed = 20 * cos(angle);
+            ball.ySpeed = 20 * sin(angle);
         }
     }
 }
 
 function checkEdgeCollision(ball) {
-    if (ball.x - ball.radius <= 0 || ball.x + ball.radius >= width) {
-        ball.xSpeed *= -1;
-    }
-    if (ball.y - ball.radius <= 0 || ball.y + ball.radius >= height) {
-        ball.ySpeed *= -1;
-    }
+    if (ball.x - ball.radius <= 7 || ball.x + ball.radius >= width) ball.xSpeed *= -1;
+    if (ball.y - ball.radius <= 7 || ball.y + ball.radius >= height) ball.ySpeed *= -1;
 }
 
-// Center image layer
+// Center image
 window.onload = function() {
     var centeredLayer = document.getElementById('centeredLayer');
     centeredLayer.style.display = 'block';
