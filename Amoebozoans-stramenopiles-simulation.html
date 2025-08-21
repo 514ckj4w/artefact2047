@@ -26,31 +26,6 @@
             z-index: 10000;
         }
 
-        .holo-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            background: linear-gradient(
-              45deg,
-              rgba(255,0,255,0.25),
-              rgba(0,255,255,0.25),
-              rgba(255,255,0,0.25),
-              rgba(255,0,255,0.25)
-            );
-            background-size: 200% 200%;
-            mix-blend-mode: screen;
-            animation: shift 3s linear infinite;
-            z-index: 5000;
-        }
-
-        @keyframes shift {
-            0% { background-position: 0% 0%; }
-            50% { background-position: 100% 100%; }
-            100% { background-position: 0% 0%; }
-        }
     </style>
 </head>
 <body bgcolor="cccccc">
@@ -60,7 +35,6 @@
 </div>
 
 <div id="centeredLayer"><img src="imyg/musk.jpg" width="200" height="200"></div>
-<div class="holo-overlay"></div>
 
 <script>
 let centerBall;
@@ -172,6 +146,7 @@ window.onload = function() {
 </script>
 </body>
 </html>
+
 
 
 
